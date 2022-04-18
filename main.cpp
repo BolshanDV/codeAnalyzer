@@ -5,7 +5,7 @@
 using namespace std;
 
 string readingFile() {
-    ifstream file("/Users/dmitrij/CLionProjects/codeAnalyzer/text/source.txt");
+    ifstream file("/Users/dmitrij/CLionProjects/codeAnalyzerScript/text/result.txt");
     string str;
     string content;
     while (getline(file, str)) {
