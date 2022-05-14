@@ -18,6 +18,7 @@ string readingFile() {
 int main() {
     Analyzer analyzer;
     analyzer.codeHandler(readingFile());
-    std::cout << "Hello, World!" << std::endl;
+    analyzer.getAnalytics();
+    cout << "Анализ кода выполнен успешно!" << endl;
     return 0;
 }
