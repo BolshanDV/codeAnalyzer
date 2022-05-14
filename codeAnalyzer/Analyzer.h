@@ -17,6 +17,9 @@ private:
     int marginsBlocksError = 0;
     int variableNamesError = 0;
     int tabError = 0;
+    double codeQualityAssessment{};
+public:
+    void setCodeQualityAssessment(double codeQualityAssessment);
 
 public:
     void getAnalytics() const;
@@ -39,6 +42,7 @@ private:
     void checkingForMarginsBetweenBlocks(const string& text);
     void checkingVariableNames(const string& text);
     void checkingTabError(const string& text);
+    void calculatingCodeQualityScore();
 };
 
 

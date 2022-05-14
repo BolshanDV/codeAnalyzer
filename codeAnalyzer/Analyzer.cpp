@@ -7,8 +7,11 @@
 #include <utility>
 #include <vector>
 #include <regex>
+#include <filesystem>
+#include <cmath>
 
 using namespace std;
+using namespace std::__fs::filesystem;
 
 void Analyzer::codeHandler(const string& text) {
     handlingSpacesBetweenOperators(text);
@@ -17,6 +20,7 @@ void Analyzer::codeHandler(const string& text) {
     checkingForMarginsBetweenBlocks(text);
     checkingVariableNames(text);
     checkingTabError(text);
+    calculatingCodeQualityScore();
 }
 
 
@@ -230,8 +234,18 @@ void Analyzer::getAnalytics() const {
     cout << "Ошибка отступов между операторами и операндами: " << mistakeOperators << endl;
     cout << "Ошибка выделения блока кода: " << curlyBracesError << endl;
     cout << "--------------------------------" << endl;
-    cout << "Оценка кода: " <<   "будет" << endl;
+    cout << "Оценка кода: " << codeQualityAssessment << endl;
 
+}
+void Analyzer::calculatingCodeQualityScore() {
+    double size = file_size("/Users/dmitrij/CLionProjects/codeAnalyzerScript/text/result.txt");
+    double sumError = mistakeOperators + curlyBracesError + stringLengthError + marginsBlocksError + variableNamesError + tabError;
+    double i = round((sumError/size) * 100 * 100) / 100;
+    setCodeQualityAssessment(i);
+}
+
+void Analyzer::setCodeQualityAssessment(double number) {
+    Analyzer::codeQualityAssessment = number;
 }
 
 Analyzer::Analyzer() = default;
