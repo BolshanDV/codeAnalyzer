@@ -6,6 +6,8 @@ using namespace std;
 
 string readingFile() {
     ifstream file("/Users/dmitrij/CLionProjects/codeAnalyzerScript/text/correctFormatting.txt");
+//    ifstream file("/Users/dmitrij/CLionProjects/codeAnalyzerScript/text/result.txt");
+
     string str;
     string content;
     while (getline(file, str)) {

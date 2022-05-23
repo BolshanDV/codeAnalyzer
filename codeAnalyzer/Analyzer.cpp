@@ -9,6 +9,7 @@
 #include <regex>
 #include <filesystem>
 #include <cmath>
+#include <cctype>
 
 using namespace std;
 using namespace std::__fs::filesystem;
@@ -26,13 +27,28 @@ void Analyzer::codeHandler(const string& text) {
 
 
 void Analyzer::handlingSpacesBetweenOperators(const string& text) {
-    for (int i = 1; i < text.length() ; i++) {
+    for (int i = text.find('{'); i < text.length() ; i++) {
 
-        if (text[i] == '*' || text[i] == '/' || text[i] == '-'){
+        if (text[i] == '-') {
             if (text[i - 1] != ' ') {
                 increaseMistakeOperators();
             }
             if (text[i + 1] != ' ') {
+                increaseMistakeOperators();
+            }
+        }
+
+        if (text[i] == '*' && isalpha(text[i + 1]) == 0) {
+            if (text[i - 1] != ' ') {
+                increaseMistakeOperators();
+            }
+            if (text[i + 1] != ' ') {
+                increaseMistakeOperators();
+            }
+        }
+
+        if (text[i] == '*' && isalpha(text[i + 1]) != 0) {
+            if (text[i - 1] != ' ') {
                 increaseMistakeOperators();
             }
         }
@@ -80,23 +96,13 @@ void Analyzer::handlingSpacesBetweenOperators(const string& text) {
         }
 
         if(text[i] == '=') {
-            if (text[i - 1] == '<') {
-                if(text[i - 2] != ' ') {
-                    increaseMistakeOperators();
-                }
-                if (text[i + 1] != ' ') {
-                    increaseMistakeOperators();
-                }
-            } else {
-                if (text[i - 1] != ' ') {
-                    increaseMistakeOperators();
-                }
-                if (text[i + 1] != ' ') {
-                    increaseMistakeOperators();
-                }
+            if (text[i - 1] != ' ' &&  text[i - 1] != '<') {
+                increaseMistakeOperators();
+            }
+            if (text[i + 1] != ' ') {
+                increaseMistakeOperators();
             }
         }
-
     }
 }
 
@@ -104,7 +110,7 @@ void Analyzer::handlingSpacesCurlyBraces(const string &text) {
 
     for (int i = 1; i < text.length(); i++) {
         if ( text[i] == '{' || text[i] == '}') {
-            if (text[i - 1] != ' ') {
+            if (text[i - 1] != ' ' && text[i] == '{') {
                 increaseCurlyBracesError();
             }
             if (text[i + 1] != '\n') {
@@ -118,17 +124,15 @@ void Analyzer::handlingSpacesCurlyBraces(const string &text) {
 void Analyzer::checkingForStringLength(const string &text) {
     int counter = 0;
     for (char i : text) {
-        if( i != '\n') {
+        if( i != '\n' ) {
             counter++;
         } else {
             counter = 0;
         }
-        if (counter >= 100) {
+        if (counter > 115) {
             counter = 0;
             increaseStringLengthError();
         }
-
-
     }
 }
 
@@ -173,8 +177,9 @@ void Analyzer::checkingVariableNames(const string &text) {
             newArr.push_back(regex_replace(i,regex(" "), ""));
         }
     }
+
     for (auto & i : newArr) {
-        if( i.length() < 4 && i != "int" && i != "i" && i != "j" && i != "cin" && i != "std") {
+        if( i.length() < 4 && i != "int" && i != "i" && i != "j" && i != "cin" && i != "std" && i != "if") {
             increaseVariableNamesError();
         }
     }
@@ -183,23 +188,52 @@ void Analyzer::checkingVariableNames(const string &text) {
 void Analyzer::checkingTabError(const string &text) {
     int flagFigure = 0;
     int flagRound = 0;
-    for (char i : text) {
-        if (i == '(') {
+    for (int i = text.find('{'); i < text.length(); i++) {
+        if (text[i] == '(') {
             flagRound++;
         }
-        if (i == ')') {
+        if (text[i] == ')') {
             flagRound--;
         }
-        if (i == '{') {
+        if (text[i] == '{') {
             flagFigure++;
         }
-        if (i == '}') {
+        if (text[i] == '}') {
             flagFigure--;
         }
-        if (flagFigure > 0 && i == ';' && flagRound == 0) {
-            increaseTabError();
+        string s = "";
+        s =  s + text[i + 2] + text[i + 3] + text[i + 4] +  text[i + 5];
+
+        int iter = flagFigure;
+
+        while (iter != 0) {
+            if (text[i] == '{' && flagFigure > 0 && s != "    ") {
+                increaseTabError();
+            }
+            if (flagFigure > 0 && text[i] == ';' && flagRound == 0 && text[i + 1] != '\n' && s != "    " ) {
+                increaseTabError();
+            }
+            iter--;
         }
     }
+}
+
+void Analyzer::getAnalytics() const {
+    cout << "Ошибка табуляции: " << tabError << endl;
+    cout << "Ошибка названия переменных: " << variableNamesError << endl;
+    cout << "Ошибка отступов между блоками: " << marginsBlocksError << endl;
+    cout << "Ошибка длины строки кода: " << stringLengthError << endl;
+    cout << "Ошибка отступов между операторами и операндами: " << mistakeOperators << endl;
+    cout << "Ошибка выделения блока кода: " << curlyBracesError << endl;
+    cout << "--------------------------------" << endl;
+    cout << "Оценка кода: " << codeQualityAssessment << endl;
+
+}
+void Analyzer::calculatingCodeQualityScore() {
+    double size = file_size("/Users/dmitrij/CLionProjects/codeAnalyzerScript/text/result.txt");
+    double sumError = mistakeOperators + curlyBracesError + stringLengthError + marginsBlocksError + variableNamesError + tabError;
+    double i = 100 - round((sumError/size) * 10000) / 100;
+    setCodeQualityAssessment(i);
 }
 
 void Analyzer::increaseMistakeOperators() {
@@ -224,24 +258,6 @@ void Analyzer::increaseVariableNamesError() {
 
 void Analyzer::increaseTabError() {
     this->tabError++;
-}
-
-void Analyzer::getAnalytics() const {
-    cout << "Ошибка табуляции: " << tabError << endl;
-    cout << "Ошибка названия переменных: " << variableNamesError << endl;
-    cout << "Ошибка отступов между блоками: " << marginsBlocksError << endl;
-    cout << "Ошибка длины строки кода: " << stringLengthError << endl;
-    cout << "Ошибка отступов между операторами и операндами: " << mistakeOperators << endl;
-    cout << "Ошибка выделения блока кода: " << curlyBracesError << endl;
-    cout << "--------------------------------" << endl;
-    cout << "Оценка кода: " << codeQualityAssessment << endl;
-
-}
-void Analyzer::calculatingCodeQualityScore() {
-    double size = file_size("/Users/dmitrij/CLionProjects/codeAnalyzerScript/text/result.txt");
-    double sumError = mistakeOperators + curlyBracesError + stringLengthError + marginsBlocksError + variableNamesError + tabError;
-    double i = round((sumError/size) * 100 * 100) / 100;
-    setCodeQualityAssessment(i);
 }
 
 void Analyzer::setCodeQualityAssessment(double number) {
